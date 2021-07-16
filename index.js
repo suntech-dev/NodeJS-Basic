@@ -40,6 +40,20 @@ app.post('/register', (req, res) => {
     });
 });
 
+app.post('/login', (req, res) => {
+    // request e-mail --> find database
+    user.findOne({ email: req.body.email }, (err, userInfo) => {
+        if (!userInfo) {
+            return res.json({
+                loginSuccess: false,
+                message: 'Email not found',
+            });
+        }
+    });
+    // if found e-mail --> password check
+    // if match password  --> token creat
+});
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
 });
