@@ -74,13 +74,13 @@ userSchema.methods.generateToken = function (cb) {
     });
 };
 
-userSchema.statics.findByToken = (token, cb) => {
+userSchema.statics.findByToken = function (token, cb) {
     let user = this;
 
     // decode token
-    jwt.verify(token, 'secretToken', (err, decoded) => {
+    jwt.verify(token, 'secretToken', function (err, decoded) {
         // client token  === database token
-        user.findOne({ _id: decoded, token: token }, (err, user) => {
+        user.findOne({ _id: decoded, token: token }, function (err, user) {
             if (err) return cb(err);
             cb(null, user);
         });
