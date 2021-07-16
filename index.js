@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const config = require('./config/key');
 const { User } = require('./models/User');
@@ -11,6 +12,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // application/json
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 const mongoose = require('mongoose');
 mongoose
@@ -42,16 +44,33 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
     // request e-mail --> find database
-    user.findOne({ email: req.body.email }, (err, userInfo) => {
-        if (!userInfo) {
+    User.findOne({ email: req.body.email }, (err, user) => {
+        if (!user) {
             return res.json({
                 loginSuccess: false,
                 message: 'Email not found',
             });
         }
+        // if found e-mail --> password check
+        user.comparePassword(req.body.password, (err, isMatch) => {
+            if (!isMatch) {
+                return res.json({
+                    loginSuccess: false,
+                    message: 'password is not match',
+                });
+            }
+
+            // if match password  --> token creat
+            user.generateToken((err, user) => {
+                if (err) return res.status(400).send(err);
+
+                // tocken save (cookie, localstorige, etc...)
+                res.cookie('x_auth', user.token)
+                    .status(200)
+                    .json({ loginSuccess: true, userID: user._id });
+            });
+        });
     });
-    // if found e-mail --> password check
-    // if match password  --> token creat
 });
 
 app.listen(port, () => {
